@@ -92,7 +92,7 @@ public class DataMgr {
         }
         Node name = map.getNamedItem("name");
         if (name == null || name.getNodeType() != Node.ATTRIBUTE_NODE) {
-          log.error("unexpected: id attribute not found");
+          log.error("unexpected: name attribute not found");
           return 1;
         }
         String out = String.format("%-5s  %s", id.getNodeValue(), name.getNodeValue());
@@ -114,6 +114,69 @@ public class DataMgr {
   }
 
   private Integer lsser(List<String> argList) {
+    Integer catId = 0;
+    try {
+      if (argList.size() == 1) {
+        catId = Integer.parseInt(argList.get(0));
+        if (catId < 0) {
+          throw new NumberFormatException();
+        }
+      } else {
+        return usage();
+      }
+    } catch(NumberFormatException e) {
+      log.error("invalid argument: " + argList.get(0));
+      return 1;
+    }
+    InputStream stream = getInputStream("/category/series", "category_id", catId.toString());
+    if (stream == null) {
+      log.error("cannot open input stream");
+      return 1;
+    }
+    try {
+      DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      Document doc = builder.parse(stream);
+      Element root = doc.getDocumentElement();
+      if (!root.getNodeName().equals("seriess")) {
+        log.error("unexpected: root element is not 'seriess': " + root.getNodeName());
+        return 1;
+      }
+      NodeList nodeList = root.getChildNodes();
+      for (int i = 0; i < nodeList.getLength(); i++) {
+        Node node = nodeList.item(i);
+        if (node.getNodeType() != Node.ELEMENT_NODE) {
+          continue;
+        }
+        if (!node.getNodeName().equals("series")) {
+          log.error("unexpected: child node is not 'series': " + node.getNodeName());
+          return 1;
+        }
+        NamedNodeMap map = node.getAttributes();
+        Node id = map.getNamedItem("id");
+        if (id == null || id.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: id attribute not found");
+          return 1;
+        }
+        Node title = map.getNamedItem("title");
+        if (title == null || title.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: title attribute not found");
+          return 1;
+        }
+        String out = String.format("%-5s  %s", id.getNodeValue(), title.getNodeValue());
+        System.out.println(out);
+      }
+    } catch(Exception e) {
+      log.error("unable to list series", e);
+      return 1;
+    } finally {
+      if (stream != null) {
+        try {
+          stream.close();
+        } catch(IOException e) {
+          log.warn("cannot close input stream", e);
+        }
+      }
+    }
     return 0;
   }
 
