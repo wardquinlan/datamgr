@@ -221,8 +221,13 @@ public class DataMgr {
           log.error("unexpected: title attribute not found");
           return 1;
         }
-        String out = String.format("%-8s  %s", date.getNodeValue(), value.getNodeValue());
-        System.out.println(out);
+        try {
+          Double.parseDouble(value.getNodeValue());
+          String out = String.format("%-8s  %s", date.getNodeValue(), value.getNodeValue());
+          System.out.println(out);
+        } catch(NumberFormatException e) {
+          // don't include missing data
+        }
       }
     } catch(Exception e) {
       log.error("unable to list series", e);
