@@ -16,6 +16,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -35,12 +36,25 @@ public class DataMgr {
       InputStream ins = con.getInputStream();
       InputStreamReader isr = new InputStreamReader(ins);
       BufferedReader in = new BufferedReader(isr);
-      String inputLine;
 
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       Document doc = builder.parse(ins);
+      Element root = doc.getDocumentElement();
+      if (!root.getNodeName().equals("categories")) {
+        log.error("unexpected: root element is not 'categories'");
+        System.exit(1);
+      }
+      NodeList nodeList = root.getChildNodes();
+      for (int i = 0; i < nodeList.getLength(); i++) {
+        Node node = nodeList.item(i);
+        if (!node.getNodeName().equals("category")) {
+          log.error("unexpected: child node is not 'category'");
+          System.exit(1);
+        }
+      }
       System.out.println(doc.getDocumentElement().getNodeName());
       
+      System.out.println("name=" + doc.getNodeName());
       NodeList nList = doc.getElementsByTagName("category");
       System.out.println("----------------------------");
       
@@ -48,11 +62,6 @@ public class DataMgr {
          Node nNode = nList.item(temp);
          System.out.println("\nCurrent Element :" + nNode.getNodeName()); 
       }
-      /*
-      while ((inputLine = in.readLine()) != null) {
-          System.out.println(inputLine);
-      }
-      */
       in.close();
     } catch(Exception e) {
       e.printStackTrace();
