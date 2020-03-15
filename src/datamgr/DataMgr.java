@@ -26,6 +26,7 @@ public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
   private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
   private static DateFormat dfQuote = new SimpleDateFormat("yyyyMMdd");
+  private static String version = "0.91";
 
   private Integer dispatch(List<String> argList) {
     if (argList.size() == 0) {
@@ -165,7 +166,7 @@ public class DataMgr {
           log.error("unexpected: title attribute not found");
           return 1;
         }
-        String out = String.format("%-8s  %s", id.getNodeValue(), title.getNodeValue());
+        String out = String.format("%-30s  %s", id.getNodeValue(), title.getNodeValue());
         System.out.println(out);
       }
     } catch(Exception e) {
@@ -354,7 +355,7 @@ public class DataMgr {
   }
 
   private Integer usage() {
-    System.out.println("datamgr version 0.90\n");
+    System.out.println("datamgr version " + version + "\n");
     System.out.println("usage:\n");
     System.out.println("datamgr lscat [cat-id]");
     System.out.println("  list child categories of cat-id (default 0)\n");
