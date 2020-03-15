@@ -17,6 +17,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -27,7 +28,6 @@ public class DataMgr {
     loadProperties();
 
     try {
-      log.info("using apikey=" + System.getProperty("datamgr.apikey"));
       String httpsURL = "https://api.stlouisfed.org/fred/category/children?category_id=0&api_key=" + System.getProperty("datamgr.apikey");
 
       URL myurl = new URL(httpsURL);
@@ -41,26 +41,31 @@ public class DataMgr {
       Document doc = builder.parse(ins);
       Element root = doc.getDocumentElement();
       if (!root.getNodeName().equals("categories")) {
-        log.error("unexpected: root element is not 'categories'");
+        log.error("unexpected: root element is not 'categories': " + root.getNodeName());
         System.exit(1);
       }
       NodeList nodeList = root.getChildNodes();
       for (int i = 0; i < nodeList.getLength(); i++) {
         Node node = nodeList.item(i);
+        if (node.getNodeType() != Node.ELEMENT_NODE) {
+          continue;
+        }
         if (!node.getNodeName().equals("category")) {
-          log.error("unexpected: child node is not 'category'");
+          log.error("unexpected: child node is not 'category': " + node.getNodeName());
           System.exit(1);
         }
-      }
-      System.out.println(doc.getDocumentElement().getNodeName());
-      
-      System.out.println("name=" + doc.getNodeName());
-      NodeList nList = doc.getElementsByTagName("category");
-      System.out.println("----------------------------");
-      
-      for (int temp = 0; temp < nList.getLength(); temp++) {
-         Node nNode = nList.item(temp);
-         System.out.println("\nCurrent Element :" + nNode.getNodeName()); 
+        NamedNodeMap map = node.getAttributes();
+        Node id = map.getNamedItem("id");
+        if (id == null || id.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: id attribute not found");
+          System.exit(1);
+        }
+        Node name = map.getNamedItem("name");
+        if (name == null || name.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: id attribute not found");
+          System.exit(1);
+        }
+        System.out.println(id + ":" + name);
       }
       in.close();
     } catch(Exception e) {
