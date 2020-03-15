@@ -28,7 +28,7 @@ public class DataMgr {
     loadProperties();
 
     try {
-      String httpsURL = "https://api.stlouisfed.org/fred/category/children?category_id=0&api_key=" + System.getProperty("datamgr.apikey");
+      String httpsURL = "https://api.stlouisfed.org/fred/category/children?category_id=32991&api_key=" + System.getProperty("datamgr.apikey");
 
       URL myurl = new URL(httpsURL);
       HttpsURLConnection con = (HttpsURLConnection) myurl.openConnection();
@@ -65,7 +65,8 @@ public class DataMgr {
           log.error("unexpected: id attribute not found");
           System.exit(1);
         }
-        System.out.println(id + ":" + name);
+        String out = String.format("%-5s  %s", id.getNodeValue(), name.getNodeValue());
+        System.out.println(out);
       }
       in.close();
     } catch(Exception e) {
