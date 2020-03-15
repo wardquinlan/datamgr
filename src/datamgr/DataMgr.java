@@ -230,7 +230,7 @@ public class DataMgr {
         }
       }
     } catch(Exception e) {
-      log.error("unable to list series", e);
+      log.error("unable to get series data", e);
       return 1;
     } finally {
       if (stream != null) {
@@ -245,6 +245,97 @@ public class DataMgr {
   }
 
   private Integer meta(List<String> argList) {
+    String serId;
+    if (argList.size() == 1) {
+      serId = argList.get(0);
+    } else {
+      return usage();
+    }
+    InputStream stream = getInputStream("/series", "series_id", serId);
+    if (stream == null) {
+      log.error("cannot open input stream");
+      return 1;
+    }
+    try {
+      DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      Document doc = builder.parse(stream);
+      Element root = doc.getDocumentElement();
+      if (!root.getNodeName().equals("seriess")) {
+        log.error("unexpected: root element is not 'seriess': " + root.getNodeName());
+        return 1;
+      }
+      NodeList nodeList = root.getChildNodes();
+      for (int i = 0; i < nodeList.getLength(); i++) {
+        Node node = nodeList.item(i);
+        if (node.getNodeType() != Node.ELEMENT_NODE) {
+          continue;
+        }
+        if (!node.getNodeName().equals("series")) {
+          log.error("unexpected: child node is not 'series': " + node.getNodeName());
+          return 1;
+        }
+        NamedNodeMap map = node.getAttributes();
+        Node id = map.getNamedItem("id");
+        if (id == null || id.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: id attribute not found");
+          return 1;
+        }
+        Node title = map.getNamedItem("title");
+        if (title == null || title.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: title attribute not found");
+          return 1;
+        }
+        Node start = map.getNamedItem("observation_start");
+        if (start == null || start.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: start attribute not found");
+          return 1;
+        }
+        Node end = map.getNamedItem("observation_end");
+        if (end == null || end.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: end attribute not found");
+          return 1;
+        }
+        Node frequency = map.getNamedItem("frequency");
+        if (frequency == null || frequency.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: frequency attribute not found");
+          return 1;
+        }
+        Node units = map.getNamedItem("units");
+        if (units == null || units.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: units attribute not found");
+          return 1;
+        }
+        Node seasonalAdjustment = map.getNamedItem("seasonal_adjustment");
+        if (seasonalAdjustment == null || seasonalAdjustment.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: seasonal_adjustment not found");
+          return 1;
+        }
+        Node notes = map.getNamedItem("notes");
+        if (notes == null || notes.getNodeType() != Node.ATTRIBUTE_NODE) {
+          log.error("unexpected: notes not found");
+          return 1;
+        }
+        System.out.println("Id                 : " + id.getNodeValue());
+        System.out.println("Title              : " + title.getNodeValue());
+        System.out.println("Start              : " + start.getNodeValue());
+        System.out.println("End                : " + end.getNodeValue());
+        System.out.println("Frequency          : " + frequency.getNodeValue());
+        System.out.println("Units              : " + units.getNodeValue());
+        System.out.println("Seasonal Adjustment: " + seasonalAdjustment.getNodeValue());
+        System.out.println("Notes              : " + notes.getNodeValue());
+      }
+    } catch(Exception e) {
+      log.error("unable to get series metadata", e);
+      return 1;
+    } finally {
+      if (stream != null) {
+        try {
+          stream.close();
+        } catch(IOException e) {
+          log.warn("cannot close input stream", e);
+        }
+      }
+    }
     return 0;
   }
 
@@ -253,7 +344,7 @@ public class DataMgr {
   }
   
   private Integer usage() {
-    System.out.println("datamgr version 1.00\n");
+    System.out.println("datamgr version 0.90\n");
     System.out.println("usage:\n");
     System.out.println("datamgr lscat [cat-id]");
     System.out.println("  list child categories of category cat-id (default 0)\n");
