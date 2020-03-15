@@ -19,13 +19,12 @@ import org.w3c.dom.Document;
 
 public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
-  private Properties props = null;
 
   public DataMgr(List<String> args) {
     loadProperties();
 
     try {
-      log.info("using apikey=" + props.getProperty("datamgr.apikey"));
+      log.info("using apikey=" + System.getProperty("datamgr.apikey"));
       String httpsURL = "https://api.stlouisfed.org/fred/category/children?category_id=0&api_key=24cb6f4b1f53b610140642e733526507";
 
       URL myurl = new URL(httpsURL);
@@ -52,14 +51,13 @@ public class DataMgr {
   
   private void loadProperties() {
     ClassLoader cl = ClassLoader.getSystemClassLoader();  
-    props = new Properties();
     try {
       InputStream is = cl.getResourceAsStream("datamgr.properties");
       if (is == null) {
         log.error("panic: cannot load properties");
         System.exit(1);
       }
-      props.load(is);    
+      System.getProperties().load(is);    
     } catch(IOException e) {
       log.error("panic: cannot load properties", e);
       System.exit(1);
