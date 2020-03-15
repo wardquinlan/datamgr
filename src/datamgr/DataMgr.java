@@ -16,6 +16,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
@@ -25,7 +27,7 @@ public class DataMgr {
 
     try {
       log.info("using apikey=" + System.getProperty("datamgr.apikey"));
-      String httpsURL = "https://api.stlouisfed.org/fred/category/children?category_id=0&api_key=24cb6f4b1f53b610140642e733526507";
+      String httpsURL = "https://api.stlouisfed.org/fred/category/children?category_id=0&api_key=" + System.getProperty("datamgr.apikey");
 
       URL myurl = new URL(httpsURL);
       HttpsURLConnection con = (HttpsURLConnection) myurl.openConnection();
@@ -38,6 +40,14 @@ public class DataMgr {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       Document doc = builder.parse(ins);
       System.out.println(doc.getDocumentElement().getNodeName());
+      
+      NodeList nList = doc.getElementsByTagName("category");
+      System.out.println("----------------------------");
+      
+      for (int temp = 0; temp < nList.getLength(); temp++) {
+         Node nNode = nList.item(temp);
+         System.out.println("\nCurrent Element :" + nNode.getNodeName()); 
+      }
       /*
       while ((inputLine = in.readLine()) != null) {
           System.out.println(inputLine);
