@@ -1,15 +1,11 @@
 package datamgr;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import javax.crypto.Cipher;
 import javax.net.ssl.HttpsURLConnection;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,30 +21,30 @@ import org.w3c.dom.NodeList;
 public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
 
-  private void dispatch(List<String> argList) {
+  private Integer dispatch(List<String> argList) {
     if (argList.size() == 0) {
-      usage();
+      return usage();
     } else if ("lscat".equals((String) argList.get(0))) {
       argList.remove(0);
-      lscat(argList);
+      return lscat(argList);
     } else if ("lsser".equals((String) argList.get(0))) {
       argList.remove(0);
-      lsser(argList);
+      return lsser(argList);
     } else if ("data".equals((String) argList.get(0))) {
       argList.remove(0);
-      data(argList);
+      return data(argList);
     } else if ("meta".equals((String) argList.get(0))) {
       argList.remove(0);
-      meta(argList);
+      return meta(argList);
     } else if ("export".equals((String) argList.get(0))) {
       argList.remove(0);
-      export(argList);
+      return export(argList);
     } else {
-      usage();
+      return usage();
     }
   }
 
-  private void lscat(List<String> argList) {
+  private Integer lscat(List<String> argList) {
     Integer catId = 0;
     try {
       if (argList.size() == 0) {
@@ -59,17 +55,16 @@ public class DataMgr {
           throw new NumberFormatException();
         }
       } else {
-        usage();
-        System.exit(1);
+        return usage();
       }
     } catch(NumberFormatException e) {
       log.error("invalid argument: " + argList.get(0));
-      System.exit(1);
+      return 1;
     }
     InputStream stream = getInputStream("/category/children", "category_id", catId.toString());
     if (stream == null) {
       log.error("cannot open input stream");
-      System.exit(1);
+      return 1;
     }
     try {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -77,7 +72,7 @@ public class DataMgr {
       Element root = doc.getDocumentElement();
       if (!root.getNodeName().equals("categories")) {
         log.error("unexpected: root element is not 'categories': " + root.getNodeName());
-        System.exit(1);
+        return 1;
       }
       NodeList nodeList = root.getChildNodes();
       for (int i = 0; i < nodeList.getLength(); i++) {
@@ -87,25 +82,25 @@ public class DataMgr {
         }
         if (!node.getNodeName().equals("category")) {
           log.error("unexpected: child node is not 'category': " + node.getNodeName());
-          System.exit(1);
+          return 1;
         }
         NamedNodeMap map = node.getAttributes();
         Node id = map.getNamedItem("id");
         if (id == null || id.getNodeType() != Node.ATTRIBUTE_NODE) {
           log.error("unexpected: id attribute not found");
-          System.exit(1);
+          return 1;
         }
         Node name = map.getNamedItem("name");
         if (name == null || name.getNodeType() != Node.ATTRIBUTE_NODE) {
           log.error("unexpected: id attribute not found");
-          System.exit(1);
+          return 1;
         }
         String out = String.format("%-5s  %s", id.getNodeValue(), name.getNodeValue());
         System.out.println(out);
       }
     } catch(Exception e) {
       log.error("unable to list categories", e);
-      System.exit(1);
+      return 1;
     } finally {
       if (stream != null) {
         try {
@@ -115,31 +110,39 @@ public class DataMgr {
         }
       }
     }
+    return 0;
   }
 
-  private void lsser(List<String> argList) {
+  private Integer lsser(List<String> argList) {
+    return 0;
   }
 
-  private void data(List<String> argList) {
+  private Integer data(List<String> argList) {
+    return 0;
   }
 
-  private void meta(List<String> argList) {
+  private Integer meta(List<String> argList) {
+    return 0;
   }
 
-  private void export(List<String> argList) {
+  private Integer export(List<String> argList) {
+    return 0;
   }
   
-  private void usage() {
+  private Integer usage() {
+    System.out.println("datamgr version 1.00\n");
+    System.out.println("usage:\n");
     System.out.println("datamgr lscat [cat-id]");
-    System.out.println("  lists child categories of category cat-id (default 0)");
+    System.out.println("  list child categories of category cat-id (default 0)\n");
     System.out.println("datamgr lsser [cat-id]");
-    System.out.println("  lists child series of category cat-id");
+    System.out.println("  list child series of category cat-id\n");
     System.out.println("datamgr data series-id");
-    System.out.println("  show series data of series series-id");
+    System.out.println("  show series data of series series-id\n");
     System.out.println("datamgr meta series-id");
-    System.out.println("  show series meta data of series series-id");
+    System.out.println("  show series meta data of series series-id\n");
     System.out.println("datamgr export series-id");
-    System.out.println("  export series data of series series-id in quote format");
+    System.out.println("  export series data of series series-id in quote format\n");
+    return 1;
   }
   
   private InputStream getInputStream(String relPath, String requestParamKey, String requestParamValue) {
@@ -147,7 +150,7 @@ public class DataMgr {
     String baseURL = System.getProperty("datamgr.baseurl");
     if (baseURL == null) {
       log.error("datamgr.baseurl not defined");
-      System.exit(1);
+      return null;
     }
     String url = baseURL + relPath + "?" + requestParamKey + "=" + requestParamValue + "&api_key=" + System.getProperty("datamgr.apikey");
     log.info("constructed url=" + url);
@@ -164,7 +167,8 @@ public class DataMgr {
   
   public DataMgr(List<String> args) {
     loadProperties();
-    dispatch(args);
+    Integer ret = dispatch(args);
+    System.exit(ret);
   }
   
   private void loadProperties() {
@@ -172,12 +176,12 @@ public class DataMgr {
     try {
       InputStream is = cl.getResourceAsStream("datamgr.properties");
       if (is == null) {
-        log.error("panic: cannot load properties");
+        log.error("cannot load properties");
         System.exit(1);
       }
       System.getProperties().load(is);    
     } catch(IOException e) {
-      log.error("panic: cannot load properties", e);
+      log.error("cannot load properties", e);
       System.exit(1);
     }
   }
