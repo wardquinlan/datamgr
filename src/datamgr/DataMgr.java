@@ -3,7 +3,11 @@ package datamgr;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -20,6 +24,8 @@ import org.w3c.dom.NodeList;
 
 public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
+  private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+  private static DateFormat dfQuote = new SimpleDateFormat("yyyyMMdd");
 
   private Integer dispatch(List<String> argList) {
     if (argList.size() == 0) {
@@ -36,9 +42,6 @@ public class DataMgr {
     } else if ("meta".equals((String) argList.get(0))) {
       argList.remove(0);
       return meta(argList);
-    } else if ("export".equals((String) argList.get(0))) {
-      argList.remove(0);
-      return export(argList);
     } else {
       return usage();
     }
@@ -182,8 +185,12 @@ public class DataMgr {
 
   private Integer data(List<String> argList) {
     String serId;
+    String quoteSymbol = null;
     if (argList.size() == 1) {
       serId = argList.get(0);
+    } else if (argList.size() == 2) {
+      serId = argList.get(0);
+      quoteSymbol = argList.get(1);
     } else {
       return usage();
     }
@@ -223,10 +230,17 @@ public class DataMgr {
         }
         try {
           Double.parseDouble(value.getNodeValue());
-          String out = String.format("%-8s  %s", date.getNodeValue(), value.getNodeValue());
-          System.out.println(out);
+          if (quoteSymbol != null) {
+            Date d = df.parse(date.getNodeValue());
+            System.out.println(dfQuote.format(d) + ",*," + quoteSymbol + "," + value.getNodeValue()); 
+          } else {
+            String out = String.format("%-8s  %s", date.getNodeValue(), value.getNodeValue());
+            System.out.println(out);
+          }
         } catch(NumberFormatException e) {
           // don't include missing data
+        } catch(ParseException e) {
+          log.warn("cannot parse date", e);
         }
       }
     } catch(Exception e) {
@@ -339,23 +353,18 @@ public class DataMgr {
     return 0;
   }
 
-  private Integer export(List<String> argList) {
-    return 0;
-  }
-  
   private Integer usage() {
     System.out.println("datamgr version 0.90\n");
     System.out.println("usage:\n");
     System.out.println("datamgr lscat [cat-id]");
-    System.out.println("  list child categories of category cat-id (default 0)\n");
+    System.out.println("  list child categories of cat-id (default 0)\n");
     System.out.println("datamgr lsser [cat-id]");
-    System.out.println("  list child series of category cat-id\n");
-    System.out.println("datamgr data series-id");
-    System.out.println("  show series data of series series-id\n");
+    System.out.println("  list child series of cat-id\n");
+    System.out.println("datamgr data series-id [quote-symbol]");
+    System.out.println("  show series data of series-id");
+    System.out.println("  (if quote-symbol is present, exports in quote format)\n");
     System.out.println("datamgr meta series-id");
-    System.out.println("  show series meta data of series series-id\n");
-    System.out.println("datamgr export series-id");
-    System.out.println("  export series data of series series-id in quote format\n");
+    System.out.println("  show series meta data of series-id\n");
     return 1;
   }
   
