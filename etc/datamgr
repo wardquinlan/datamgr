@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ "$DATAMGR_HOME" == "" ]; then
+  echo DATAMGR_HOME not defined
+  exit 1
+fi
+
+CLASSPATH=$DATAMGR_HOME/datamgr.d
+CLASSPATH=$CLASSPATH:$DATAMGR_HOME/datamgr.d/datamgr.jar
+CLASSPATH=$CLASSPATH:$DATAMGR_HOME/crypto.d/commons-logging-1.1.jar
+CLASSPATH=$CLASSPATH:$DATAMGR_HOME/crypto.d/log4j-1.2.14.jar
+CMD="$JAVA_HOME/bin/java -classpath $CLASSPATH -Xmx128m datamgr.DataMgr $@"
+eval $CMD
