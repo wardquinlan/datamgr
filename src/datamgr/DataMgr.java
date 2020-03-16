@@ -27,6 +27,7 @@ public class DataMgr {
   private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
   private static DateFormat dfQuote = new SimpleDateFormat("yyyyMMdd");
   private static String version = "0.91";
+  private static int LIMIT = 500;
 
   private Integer dispatch(List<String> argList) {
     if (argList.size() == 0) {
@@ -186,22 +187,8 @@ public class DataMgr {
     return 0;
   }
 
-  private Integer lsser(List<String> argList) {
-    Integer catId = 0;
-    try {
-      if (argList.size() == 1) {
-        catId = Integer.parseInt(argList.get(0));
-        if (catId < 0) {
-          throw new NumberFormatException();
-        }
-      } else {
-        return usage();
-      }
-    } catch(NumberFormatException e) {
-      log.error("invalid argument: " + argList.get(0));
-      return 1;
-    }
-    InputStream stream = getInputStream("/category/series", "category_id", catId.toString());
+  private Integer lsserChunk(List<String> result, Integer catId, Integer offset) {
+    InputStream stream = getInputStream("/category/series", "category_id", catId.toString(), offset);
     if (stream == null) {
       log.error("cannot open input stream");
       return 1;
@@ -212,10 +199,6 @@ public class DataMgr {
       Element root = doc.getDocumentElement();
       if (!root.getNodeName().equals("seriess")) {
         log.error("unexpected: root element is not 'seriess': " + root.getNodeName());
-        return 1;
-      }
-      if (getcat(catId, "%-30s  %s") != 0) {
-        log.error("unexpected: could not retrieve category: " + catId);
         return 1;
       }
       NodeList nodeList = root.getChildNodes();
@@ -240,11 +223,10 @@ public class DataMgr {
           return 1;
         }
         String out = String.format("%-30s  %s", id.getNodeValue(), title.getNodeValue());
-        System.out.println(out);
+        result.add(out);
       }
-      System.out.println();
     } catch(Exception e) {
-      log.error("unable to list series", e);
+      log.error("unable to get series chunk", e);
       return 1;
     } finally {
       if (stream != null) {
@@ -255,6 +237,48 @@ public class DataMgr {
         }
       }
     }
+    return 0;
+  }
+  
+  private Integer lsser(List<String> argList) {
+    Integer catId = 0;
+    try {
+      if (argList.size() == 1) {
+        catId = Integer.parseInt(argList.get(0));
+        if (catId < 0) {
+          throw new NumberFormatException();
+        }
+      } else {
+        return usage();
+      }
+    } catch(NumberFormatException e) {
+      log.error("invalid argument: " + argList.get(0));
+      return 1;
+    }
+    if (getcat(catId, "%-30s  %s") != 0) {
+      log.error("unexpected: could not retrieve category: " + catId);
+      return 1;
+    }
+    List<String> result = new ArrayList<String>();
+    List<String> resultChunk = new ArrayList<String>();
+    Integer offset = 0;
+    while (true) {
+      resultChunk.clear();
+      Integer ret = lsserChunk(resultChunk, catId, offset);
+      if (ret != 0) {
+        log.error("could not read series chunk");
+        return ret;
+      }
+      if (resultChunk.size() == 0) {
+        break;
+      }
+      result.addAll(resultChunk);
+      offset += LIMIT;
+    }
+    for(String res: result) {
+      System.out.println(res);
+    }
+    System.out.println();
     return 0;
   }
 
@@ -444,6 +468,10 @@ public class DataMgr {
   }
   
   private InputStream getInputStream(String relPath, String requestParamKey, String requestParamValue) {
+    return getInputStream(relPath, requestParamKey, requestParamValue, null);
+  }
+  
+  private InputStream getInputStream(String relPath, String requestParamKey, String requestParamValue, Integer offset) {
     InputStream stream = null;
     String baseURL = System.getProperty("datamgr.baseurl");
     if (baseURL == null) {
@@ -451,6 +479,9 @@ public class DataMgr {
       return null;
     }
     String url = baseURL + relPath + "?" + requestParamKey + "=" + requestParamValue + "&api_key=" + System.getProperty("datamgr.apikey");
+    if (offset != null) {
+      url += "&limit=" + LIMIT + "&offset=" + offset;
+    }
     log.info("constructed url=" + url);
     try {
       URL myurl = new URL(url);
