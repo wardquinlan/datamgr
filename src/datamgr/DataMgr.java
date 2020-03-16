@@ -48,6 +48,70 @@ public class DataMgr {
     }
   }
 
+  private Integer getcat(Integer catId, String format) {
+    InputStream stream = getInputStream("/category", "category_id", catId.toString());
+    if (stream == null) {
+      log.error("cannot open input stream");
+      return 1;
+    }
+    try {
+      DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      Document doc = builder.parse(stream);
+      Element root = doc.getDocumentElement();
+      if (!root.getNodeName().equals("categories")) {
+        log.error("unexpected: root element is not 'categories': " + root.getNodeName());
+        return 1;
+      }
+      NodeList nodeList = root.getChildNodes();
+      if (nodeList.getLength() == 0) {
+        log.error("category not found: " + catId);
+        return 1;
+      }
+      for (int i = 0; i < nodeList.getLength(); i++) {
+        Node node = nodeList.item(i);
+        if (node.getNodeType() != Node.ELEMENT_NODE) {
+          continue;
+        }
+        if (!node.getNodeName().equals("category")) {
+          log.error("unexpected: child node is not 'category': " + node.getNodeName());
+          return 1;
+        }
+        NamedNodeMap map = node.getAttributes();
+        Node id = map.getNamedItem("id");
+        if (id == null) {
+          log.error("unexpected: id attribute not found");
+          return 1;
+        }
+        Node parentId = map.getNamedItem("parent_id");
+        if (parentId == null) {
+          log.error("unexpected: parent_id attribute not found");
+          return 1;
+        }
+        Node name = map.getNamedItem("name");
+        if (name == null) {
+          log.error("unexpected: name attribute not found");
+          return 1;
+        }
+        String out = String.format(format + " (parent = %s)", id.getNodeValue(), name.getNodeValue(), parentId.getNodeValue());
+        System.out.println("-----------------------------------------------------------------------------------------");
+        System.out.println(out);
+        System.out.println("-----------------------------------------------------------------------------------------");
+      }
+    } catch(Exception e) {
+      log.error("unable to list categories", e);
+      return 1;
+    } finally {
+      if (stream != null) {
+        try {
+          stream.close();
+        } catch(IOException e) {
+          log.warn("cannot close input stream", e);
+        }
+      }
+    }
+    return 0;
+  }
+  
   private Integer lscat(List<String> argList) {
     Integer catId;
     try {
@@ -76,6 +140,10 @@ public class DataMgr {
       Element root = doc.getDocumentElement();
       if (!root.getNodeName().equals("categories")) {
         log.error("unexpected: root element is not 'categories': " + root.getNodeName());
+        return 1;
+      }
+      if (getcat(catId, "%-5s  %s") != 0) {
+        log.error("unexpected: could not retrieve category: " + catId);
         return 1;
       }
       NodeList nodeList = root.getChildNodes();
@@ -143,6 +211,10 @@ public class DataMgr {
       Element root = doc.getDocumentElement();
       if (!root.getNodeName().equals("seriess")) {
         log.error("unexpected: root element is not 'seriess': " + root.getNodeName());
+        return 1;
+      }
+      if (getcat(catId, "%-30s  %s") != 0) {
+        log.error("unexpected: could not retrieve category: " + catId);
         return 1;
       }
       NodeList nodeList = root.getChildNodes();
