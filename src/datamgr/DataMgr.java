@@ -309,8 +309,7 @@ public class DataMgr {
             Date d = df.parse(date.getNodeValue());
             System.out.println(dfQuote.format(d) + ",*," + quoteSymbol + "," + value.getNodeValue()); 
           } else {
-            String out = String.format("%-8s  %s", date.getNodeValue(), value.getNodeValue());
-            System.out.println(out);
+            System.out.println(date.getNodeValue() + "," + value.getNodeValue());
           }
         } catch(NumberFormatException e) {
           // don't include missing data
