@@ -26,7 +26,7 @@ public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
   private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
   private static DateFormat dfQuote = new SimpleDateFormat("yyyyMMdd");
-  private static String version = "0.91";
+  private static String version = "0.92";
   private static int LIMIT = 500;
 
   private Integer dispatch(List<String> argList) {
@@ -295,7 +295,7 @@ public class DataMgr {
     }
     InputStream stream = getInputStream("/series/observations", "series_id", serId);
     if (stream == null) {
-      log.error("cannot open input stream");
+      log.warn("cannot open input stream, series might not exist");
       return 1;
     }
     try {
@@ -365,7 +365,7 @@ public class DataMgr {
     }
     InputStream stream = getInputStream("/series", "series_id", serId);
     if (stream == null) {
-      log.error("cannot open input stream");
+      log.warn("cannot open input stream, series might not exist");
       return 1;
     }
     try {
@@ -489,7 +489,7 @@ public class DataMgr {
       con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/20100101 Firefox/63.0");
       stream = con.getInputStream();
     } catch(Exception e) {
-      log.error("caught exception", e);
+      log.info("caught exception", e);
     }
     return stream;
   }
