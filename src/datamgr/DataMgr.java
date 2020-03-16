@@ -326,10 +326,6 @@ public class DataMgr {
           return 1;
         }
         Node notes = map.getNamedItem("notes");
-        if (notes == null || notes.getNodeType() != Node.ATTRIBUTE_NODE) {
-          log.error("unexpected: notes not found");
-          return 1;
-        }
         System.out.println("Id                 : " + id.getNodeValue());
         System.out.println("Title              : " + title.getNodeValue());
         System.out.println("Start              : " + start.getNodeValue());
@@ -337,7 +333,9 @@ public class DataMgr {
         System.out.println("Frequency          : " + frequency.getNodeValue());
         System.out.println("Units              : " + units.getNodeValue());
         System.out.println("Seasonal Adjustment: " + seasonalAdjustment.getNodeValue());
-        System.out.println("Notes              : " + notes.getNodeValue());
+        if (notes != null) {
+          System.out.println("Notes              : " + notes.getNodeValue());
+        }
       }
     } catch(Exception e) {
       log.error("unable to get series metadata", e);
