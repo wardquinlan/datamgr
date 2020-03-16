@@ -170,6 +170,7 @@ public class DataMgr {
         String out = String.format("%-5s  %s", id.getNodeValue(), name.getNodeValue());
         System.out.println(out);
       }
+      System.out.println();
     } catch(Exception e) {
       log.error("unable to list categories", e);
       return 1;
@@ -241,6 +242,7 @@ public class DataMgr {
         String out = String.format("%-30s  %s", id.getNodeValue(), title.getNodeValue());
         System.out.println(out);
       }
+      System.out.println();
     } catch(Exception e) {
       log.error("unable to list series", e);
       return 1;
@@ -406,8 +408,10 @@ public class DataMgr {
         System.out.println("Units              : " + units.getNodeValue());
         System.out.println("Seasonal Adjustment: " + seasonalAdjustment.getNodeValue());
         if (notes != null) {
-          System.out.println("Notes              : " + notes.getNodeValue());
+          System.out.println();
+          System.out.println(notes.getNodeValue());
         }
+        System.out.println();
       }
     } catch(Exception e) {
       log.error("unable to get series metadata", e);
@@ -425,7 +429,8 @@ public class DataMgr {
   }
 
   private Integer usage() {
-    System.out.println("datamgr version " + version + "\n");
+    System.out.println("datamgr version " + version);
+    System.out.println("-------------------------------------------\n");
     System.out.println("usage:\n");
     System.out.println("datamgr lscat [cat-id]");
     System.out.println("  list child categories of cat-id (default 0)\n");
