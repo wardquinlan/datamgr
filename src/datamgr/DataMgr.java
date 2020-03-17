@@ -7,6 +7,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
   private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
   private static DateFormat dfQuote = new SimpleDateFormat("yyyyMMdd");
-  private static String version = "0.92";
+  private static String version = "0.93";
   private static int LIMIT = 500;
 
   private Integer dispatch(List<String> argList) {
@@ -331,7 +332,14 @@ public class DataMgr {
           Double.parseDouble(value.getNodeValue());
           if (quoteSymbol != null) {
             Date d = df.parse(date.getNodeValue());
-            System.out.println(dfQuote.format(d) + ",*," + quoteSymbol + "," + value.getNodeValue()); 
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(d);
+            int year = cal.get(Calendar.YEAR);
+            if (year >= 1970) {
+              System.out.println(dfQuote.format(d) + ",*," + quoteSymbol + "," + value.getNodeValue());
+            } else {
+              log.info("suppressing year prior to 1970: " + year);
+            }
           } else {
             System.out.println(date.getNodeValue() + "," + value.getNodeValue());
           }
