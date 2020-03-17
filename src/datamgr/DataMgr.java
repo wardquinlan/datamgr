@@ -27,7 +27,7 @@ public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
   private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
   private static DateFormat dfQuote = new SimpleDateFormat("yyyyMMdd");
-  private static String version = "0.93";
+  private static String version = "0.94";
   private static int LIMIT = 500;
 
   private Integer dispatch(List<String> argList) {
@@ -286,6 +286,11 @@ public class DataMgr {
   private Integer data(List<String> argList) {
     String serId;
     String quoteSymbol = null;
+    boolean aggregate = false;
+    if (argList.size() >= 1 && argList.get(0).equals("--aggregate-days-to-weeks")) {
+      argList.remove(0);
+      aggregate = true;
+    }
     if (argList.size() == 1) {
       serId = argList.get(0);
     } else if (argList.size() == 2) {
@@ -330,18 +335,20 @@ public class DataMgr {
         }
         try {
           Double.parseDouble(value.getNodeValue());
-          if (quoteSymbol != null) {
-            Date d = df.parse(date.getNodeValue());
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(d);
-            int year = cal.get(Calendar.YEAR);
-            if (year >= 1970) {
-              System.out.println(dfQuote.format(d) + ",*," + quoteSymbol + "," + value.getNodeValue());
+          Date d = df.parse(date.getNodeValue());
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(d);
+          if (!aggregate || cal.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY) {
+            if (quoteSymbol != null) {
+              int year = cal.get(Calendar.YEAR);
+              if (year >= 1970) {
+                System.out.println(dfQuote.format(d) + ",*," + quoteSymbol + "," + value.getNodeValue());
+              } else {
+                log.info("suppressing year prior to 1970: " + year);
+              }
             } else {
-              log.info("suppressing year prior to 1970: " + year);
+              System.out.println(date.getNodeValue() + "," + value.getNodeValue());
             }
-          } else {
-            System.out.println(date.getNodeValue() + "," + value.getNodeValue());
           }
         } catch(NumberFormatException e) {
           // don't include missing data
@@ -465,9 +472,9 @@ public class DataMgr {
     System.out.println("usage:\n");
     System.out.println("datamgr lscat [cat-id]");
     System.out.println("  list child categories of cat-id (default 0)\n");
-    System.out.println("datamgr lsser [cat-id]");
+    System.out.println("datamgr lsser cat-id");
     System.out.println("  list child series of cat-id\n");
-    System.out.println("datamgr data series-id [quote-symbol]");
+    System.out.println("datamgr data [--aggregate-days-to-weeks] series-id [quote-symbol]");
     System.out.println("  show series data of series-id");
     System.out.println("  (if quote-symbol is present, exports in quote format)\n");
     System.out.println("datamgr meta series-id");
