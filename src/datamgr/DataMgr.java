@@ -27,7 +27,7 @@ public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
   private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
   private static DateFormat dfQuote = new SimpleDateFormat("yyyyMMdd");
-  private static String version = "0.94";
+  private static String version = "0.95";
   private static int LIMIT = 500;
 
   private Integer dispatch(List<String> argList) {
@@ -344,7 +344,7 @@ public class DataMgr {
               if (year >= 1970) {
                 System.out.println(dfQuote.format(d) + ",*," + quoteSymbol + "," + value.getNodeValue());
               } else {
-                log.info("suppressing year prior to 1970: " + year);
+                log.debug("suppressing year prior to 1970: " + year);
               }
             } else {
               System.out.println(date.getNodeValue() + "," + value.getNodeValue());
