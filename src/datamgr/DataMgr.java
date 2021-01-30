@@ -27,7 +27,7 @@ public class DataMgr {
   private static Log log = LogFactory.getFactory().getInstance(DataMgr.class);
   private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
   private static DateFormat dfQuote = new SimpleDateFormat("yyyyMMdd");
-  private static String version = "0.95";
+  private static String version = "0.96";
   private static int LIMIT = 500;
 
   private Integer dispatch(List<String> argList) {
@@ -287,9 +287,17 @@ public class DataMgr {
     String serId;
     String quoteSymbol = null;
     boolean aggregate = false;
-    if (argList.size() >= 1 && argList.get(0).equals("--aggregate-days-to-weeks")) {
+    String unit = null;
+    while (argList.size() >= 1  && argList.get(0).startsWith("--")) {
+      if (argList.get(0).equals("--aggregate-days-to-weeks")) {
+        aggregate = true;
+      }
+      else if (argList.get(0).startsWith("--unit=")) {
+        unit = argList.get(0).substring(7);
+      } else {
+        return usage();
+      }
       argList.remove(0);
-      aggregate = true;
     }
     if (argList.size() == 1) {
       serId = argList.get(0);
@@ -474,7 +482,17 @@ public class DataMgr {
     System.out.println("  list child categories of cat-id (default 0)\n");
     System.out.println("datamgr lsser cat-id");
     System.out.println("  list child series of cat-id\n");
-    System.out.println("datamgr data [--aggregate-days-to-weeks] series-id [quote-symbol]");
+    System.out.println("datamgr data [--aggregate-days-to-weeks] [--unit=<unit>] series-id [quote-symbol]");
+    System.out.println("        <unit> is one of:");
+    System.out.println("          lin = Levels (No transformation)");
+    System.out.println("          chg = Change");
+    System.out.println("          ch1 = Change from Year Ago");
+    System.out.println("          pch = Percent Change");
+    System.out.println("          pc1 = Percent Change from Year Ago");
+    System.out.println("          pca = Compounded Annual Rate of Change");
+    System.out.println("          cch = Continuously Compounded Rate of Change");
+    System.out.println("          cca = Continuously Compounded Annual Rate of Change");
+    System.out.println("          log = Natural Log");
     System.out.println("  show series data of series-id");
     System.out.println("  (if quote-symbol is present, exports in quote format)\n");
     System.out.println("datamgr meta series-id");
