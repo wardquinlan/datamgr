@@ -189,7 +189,7 @@ public class DataMgr {
   }
 
   private Integer lsserChunk(List<String> result, Integer catId, Integer offset) {
-    InputStream stream = getInputStream("/category/series", "category_id", catId.toString(), offset);
+    InputStream stream = getInputStream("/category/series", "category_id", catId.toString(), offset, null);
     if (stream == null) {
       log.error("cannot open input stream");
       return 1;
@@ -287,13 +287,13 @@ public class DataMgr {
     String serId;
     String quoteSymbol = null;
     boolean aggregate = false;
-    String unit = null;
+    String units = null;
     while (argList.size() >= 1  && argList.get(0).startsWith("--")) {
       if (argList.get(0).equals("--aggregate-days-to-weeks")) {
         aggregate = true;
       }
-      else if (argList.get(0).startsWith("--unit=")) {
-        unit = argList.get(0).substring(7);
+      else if (argList.get(0).startsWith("--units=")) {
+        units = argList.get(0).substring(8);
       } else {
         return usage();
       }
@@ -307,7 +307,7 @@ public class DataMgr {
     } else {
       return usage();
     }
-    InputStream stream = getInputStream("/series/observations", "series_id", serId);
+    InputStream stream = getInputStream("/series/observations", "series_id", serId, null, units);
     if (stream == null) {
       log.warn("cannot open input stream, series might not exist");
       return 1;
@@ -482,8 +482,8 @@ public class DataMgr {
     System.out.println("  list child categories of cat-id (default 0)\n");
     System.out.println("datamgr lsser cat-id");
     System.out.println("  list child series of cat-id\n");
-    System.out.println("datamgr data [--aggregate-days-to-weeks] [--unit=<unit>] series-id [quote-symbol]");
-    System.out.println("        <unit> is one of:");
+    System.out.println("datamgr data [--aggregate-days-to-weeks] [--units=<units>] series-id [quote-symbol]");
+    System.out.println("        <units> is one of:");
     System.out.println("          lin = Levels (No transformation)");
     System.out.println("          chg = Change");
     System.out.println("          ch1 = Change from Year Ago");
@@ -501,10 +501,10 @@ public class DataMgr {
   }
   
   private InputStream getInputStream(String relPath, String requestParamKey, String requestParamValue) {
-    return getInputStream(relPath, requestParamKey, requestParamValue, null);
+    return getInputStream(relPath, requestParamKey, requestParamValue, null, null);
   }
   
-  private InputStream getInputStream(String relPath, String requestParamKey, String requestParamValue, Integer offset) {
+  private InputStream getInputStream(String relPath, String requestParamKey, String requestParamValue, Integer offset, String units) {
     InputStream stream = null;
     String baseURL = System.getProperty("datamgr.baseurl");
     if (baseURL == null) {
@@ -514,6 +514,9 @@ public class DataMgr {
     String url = baseURL + relPath + "?" + requestParamKey + "=" + requestParamValue + "&api_key=" + System.getProperty("datamgr.apikey");
     if (offset != null) {
       url += "&limit=" + LIMIT + "&offset=" + offset;
+    }
+    if (units != null ) {
+      url += "&units=" + units;
     }
     log.info("constructed url=" + url);
     try {
